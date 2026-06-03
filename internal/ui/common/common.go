@@ -1,0 +1,111 @@
+package common
+
+import (
+	"fmt"
+	"image"
+	"os"
+
+	tea "charm.land/bubbletea/v2"
+	"github.com/atotto/clipboard"
+	uv "github.com/charmbracelet/ultraviolet"
+	"github.com/package-register/mocode/internal/config"
+	"github.com/package-register/mocode/internal/ui/panel"
+	"github.com/package-register/mocode/internal/ui/styles"
+	"github.com/package-register/mocode/internal/ui/util"
+	"github.com/package-register/mocode/internal/workspace"
+)
+
+// MaxAttachmentSize defines the maximum allowed size for file attachments (5 MB).
+const MaxAttachmentSize = int64(5 * 1024 * 1024)
+
+// AllowedImageTypes defines the permitted image file types.
+var AllowedImageTypes = []string{".jpg", ".jpeg", ".png"}
+
+// Common defines common UI options and configurations.
+type Common struct {
+	Workspace workspace.Workspace
+	Styles    *styles.Styles
+	Panels    *panel.View
+}
+
+// Config returns the pure-data configuration associated with this [Common] instance.
+func (c *Common) Config() *config.Config {
+	return c.Workspace.Config()
+}
+
+// DefaultCommon returns the default common UI configurations.
+func DefaultCommon(ws workspace.Workspace) *Common {
+	s := styles.ThemeForProvider(largeModelProviderID(ws))
+	return &Common{
+		Workspace: ws,
+		Styles:    &s,
+		Panels:    panel.NewView(&s),
+	}
+}
+
+// largeModelProviderID returns the provider ID of the currently selected large model.
+func largeModelProviderID(ws workspace.Workspace) string {
+	if ws == nil {
+		return ""
+	}
+	cfg := ws.Config()
+	if cfg == nil {
+		return ""
+	}
+	return cfg.Models[config.SelectedModelTypeLarge].Provider
+}
+
+// IsHyper reports whether the currently selected large model is provided by Hyper.
+func (c *Common) IsHyper() bool {
+	return largeModelProviderID(c.Workspace) == "hyper"
+}
+
+// CenterRect returns a new Rectangle centered within the given area.
+func CenterRect(area uv.Rectangle, width, height int) uv.Rectangle {
+	centerX := area.Min.X + area.Dx()/2
+	centerY := area.Min.Y + area.Dy()/2
+	minX := centerX - width/2
+	minY := centerY - height/2
+	maxX := minX + width
+	maxY := minY + height
+	return image.Rect(minX, minY, maxX, maxY)
+}
+
+// BottomLeftRect returns a new Rectangle positioned at the bottom-left.
+func BottomLeftRect(area uv.Rectangle, width, height int) uv.Rectangle {
+	minX := area.Min.X
+	maxX := minX + width
+	maxY := area.Max.Y
+	minY := maxY - height
+	return image.Rect(minX, minY, maxX, maxY)
+}
+
+// IsFileTooBig checks if the file at the given path exceeds the specified size limit.
+func IsFileTooBig(filePath string, sizeLimit int64) (bool, error) {
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		return false, fmt.Errorf("error getting file info: %w", err)
+	}
+	if fileInfo.Size() > sizeLimit {
+		return true, nil
+	}
+	return false, nil
+}
+
+// CopyToClipboard copies the given text to the clipboard.
+func CopyToClipboard(text, successMessage string) tea.Cmd {
+	return CopyToClipboardWithCallback(text, successMessage, nil)
+}
+
+// CopyToClipboardWithCallback copies text to clipboard and executes a callback.
+func CopyToClipboardWithCallback(text, successMessage string, callback tea.Cmd) tea.Cmd {
+	return tea.Sequence(
+		tea.SetClipboard(text),
+		func() tea.Msg {
+			_ = clipboard.WriteAll(text)
+			return nil
+		},
+		callback,
+		util.ReportInfo(successMessage),
+	)
+}

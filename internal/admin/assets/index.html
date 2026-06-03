@@ -1,0 +1,1186 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fromsko Admin</title>
+    <script src="/assets/tailwind-browser.js"></script>
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #0e1110;
+            --panel: #18191f;
+            --panel2: #20232b;
+            --line: #91f7c3;
+            --acid: #eaff63;
+            --text: #f3f0e8;
+            --muted: #9aa097;
+            --danger: #ff5370;
+            --ink: #10110d;
+            --blue: #8ecbff
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: radial-gradient(circle at 18% -10%, rgba(145, 247, 195, .25), transparent 28%), radial-gradient(circle at 88% 10%, rgba(234, 255, 99, .12), transparent 24%), linear-gradient(135deg, #10130f, #191820 58%, #101016);
+            color: var(--text);
+            font: 14px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            overflow-x: hidden
+        }
+
+        body:before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: repeating-linear-gradient(0deg, rgba(255, 255, 255, .025) 0 1px, transparent 1px 4px);
+            mix-blend-mode: overlay
+        }
+
+        .shell {
+            width: min(1320px, calc(100vw - 32px));
+            margin: 0 auto;
+            padding: 28px 0 56px
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+            gap: 16px
+        }
+
+        .title,
+        .status,
+        .card {
+            border: 1px solid rgba(255, 255, 255, .1);
+            background: linear-gradient(180deg, rgba(31, 33, 40, .9), rgba(18, 19, 24, .94));
+            box-shadow: 0 18px 70px rgba(0, 0, 0, .34);
+            position: relative;
+            overflow: hidden
+        }
+
+        .title {
+            padding: 26px
+        }
+
+        .title:after,
+        .card:after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--line), var(--acid), transparent)
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(38px, 7vw, 82px);
+            line-height: .86;
+            letter-spacing: -.085em
+        }
+
+        .mark {
+            color: var(--acid);
+            text-shadow: 0 0 30px rgba(234, 255, 99, .28)
+        }
+
+        .subtitle {
+            max-width: 760px;
+            color: var(--muted);
+            font-size: 15px
+        }
+
+        .badge {
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+            color: var(--line);
+            border: 1px solid rgba(145, 247, 195, .28);
+            padding: 6px 10px;
+            margin-bottom: 16px;
+            background: rgba(145, 247, 195, .06)
+        }
+
+        .status {
+            padding: 22px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px
+        }
+
+        .big {
+            font-size: 30px;
+            color: var(--line);
+            font-weight: 900
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 14px;
+            margin-top: 14px
+        }
+
+        .card {
+            grid-column: span 6;
+            padding: 18px
+        }
+
+        .wide {
+            grid-column: span 12
+        }
+
+        .tall {
+            min-height: 420px
+        }
+
+        h2 {
+            margin: 0 0 14px;
+            font-size: 17px;
+            letter-spacing: .02em
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 10px;
+            align-items: center;
+            margin: 9px 0
+        }
+
+        .label {
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .08em
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            background: #101117;
+            color: var(--text);
+            border: 1px solid rgba(255, 255, 255, .13);
+            padding: 10px 11px;
+            font: inherit;
+            outline: none
+        }
+
+        textarea {
+            min-height: 92px;
+            resize: vertical
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: var(--line);
+            box-shadow: 0 0 0 3px rgba(145, 247, 195, .08)
+        }
+
+        button {
+            border: 0;
+            background: var(--acid);
+            color: var(--ink);
+            font: 900 12px ui-monospace, monospace;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            padding: 10px 13px;
+            cursor: pointer;
+            transition: .16s transform, .16s filter
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.08)
+        }
+
+        button.secondary {
+            background: #2b2d36;
+            color: var(--text);
+            border: 1px solid rgba(255, 255, 255, .14)
+        }
+
+        button.danger {
+            background: var(--danger);
+            color: white
+        }
+
+        .actions {
+            display: flex;
+            gap: 9px;
+            flex-wrap: wrap;
+            margin-top: 13px
+        }
+
+        .pill {
+            display: inline-flex;
+            margin: 4px 6px 4px 0;
+            padding: 5px 8px;
+            border: 1px solid rgba(145, 247, 195, .24);
+            color: var(--line);
+            background: rgba(145, 247, 195, .06)
+        }
+
+        .split {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 14px
+        }
+
+        .list {
+            display: grid;
+            gap: 8px;
+            max-height: 470px;
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .list::-webkit-scrollbar { width: 0; }
+
+        .item {
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            background: #13151b;
+            cursor: pointer
+        }
+
+        .item:hover,
+        .item.active {
+            border-color: rgba(145, 247, 195, .55);
+            background: #182019
+        }
+
+        .item b {
+            color: var(--acid)
+        }
+
+        .tools {
+            display: grid;
+            gap: 8px;
+            max-height: 360px;
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .tools::-webkit-scrollbar { width: 0; }
+
+        .tool {
+            padding: 11px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            background: #12131a
+        }
+
+        .tool b {
+            color: var(--acid)
+        }
+
+        .muted {
+            color: var(--muted)
+        }
+
+        .mini {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .qr {
+            background: #fff;
+            color: #000;
+            display: inline-block;
+            padding: 12px;
+            margin-top: 10px;
+            max-width: 100%;
+            overflow: hidden
+        }
+
+        .qr img {
+            display: block;
+            width: min(300px, 100%);
+            height: auto;
+            image-rendering: pixelated
+        }
+
+        .toast {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            max-width: 520px;
+            padding: 12px 14px;
+            background: #242833;
+            border: 1px solid var(--line);
+            color: var(--line);
+            transform: translateY(140px);
+            transition: .2s;
+            z-index: 20
+        }
+
+        .toast.show {
+            transform: translateY(0)
+        }
+
+        pre {
+            margin: 0;
+            white-space: pre-wrap
+        }
+
+        .quota {
+            font-size: 12px;
+            color: var(--blue);
+            max-height: 220px;
+            overflow-y: auto;
+            background: #101117;
+            border: 1px solid rgba(255, 255, 255, .1);
+            padding: 10px;
+            margin-top: 10px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .quota::-webkit-scrollbar { width: 0; }
+
+        /* ── Code Editor (Raw Config) ── */
+        .code-editor-wrap {
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, .1);
+            background: #0a0c10;
+            border-radius: 2px;
+        }
+
+        .code-editor-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: #13151b;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .code-editor-header .dots {
+            display: flex;
+            gap: 6px
+        }
+
+        .code-editor-header .dots span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block
+        }
+
+        .code-editor-header .dots .red { background: #ff5f57 }
+        .code-editor-header .dots .yel { background: #febc2e }
+        .code-editor-header .dots .grn { background: #28c840 }
+
+        .code-editor-body {
+            position: relative;
+            max-height: 480px;
+            overflow-y: auto;
+        }
+
+        /* Hidden scrollbar — scrollable via mouse wheel / trackpad / touch */
+        .code-editor-body {
+            scrollbar-width: none;          /* Firefox */
+            -ms-overflow-style: none;       /* IE/Edge */
+        }
+        .code-editor-body::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+        }
+
+        .code-editor-body textarea {
+            width: 100%;
+            min-height: 420px;
+            border: 0;
+            background: transparent;
+            color: var(--line);
+            font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            padding: 14px 16px;
+            resize: none;
+            outline: none;
+            tab-size: 2;
+            white-space: pre;
+            overflow-wrap: normal;
+            overflow-x: auto;
+        }
+
+        .copy-btn {
+            background: #2b2d36;
+            color: var(--text);
+            border: 1px solid rgba(255, 255, 255, .14);
+            font-size: 11px;
+            padding: 4px 10px;
+            cursor: pointer;
+            transition: .15s background
+        }
+
+        .copy-btn:hover {
+            background: #3a3d4a
+        }
+
+        .copy-btn.copied {
+            background: var(--line);
+            color: var(--ink);
+            border-color: var(--line)
+        }
+
+        /* ── Provider list item ── */
+        .prov-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            background: #13151b;
+            cursor: pointer;
+            transition: .15s border-color, .15s background
+        }
+
+        .prov-item:hover,
+        .prov-item.active {
+            border-color: rgba(145, 247, 195, .55);
+            background: #182019
+        }
+
+        .prov-item .prov-info b {
+            color: var(--acid)
+        }
+
+        .prov-item .prov-info .mini {
+            margin-top: 2px
+        }
+
+        .prov-actions {
+            display: flex;
+            gap: 6px
+        }
+
+        .prov-actions button {
+            font-size: 10px;
+            padding: 4px 8px
+        }
+
+        /* ── Import/Export ── */
+        .import-drop {
+            border: 2px dashed rgba(255, 255, 255, .12);
+            padding: 28px;
+            text-align: center;
+            color: var(--muted);
+            cursor: pointer;
+            transition: .2s border-color, .2s background;
+            margin-top: 10px
+        }
+
+        .import-drop:hover,
+        .import-drop.dragover {
+            border-color: var(--line);
+            background: rgba(145, 247, 195, .04)
+        }
+
+        .import-drop input {
+            display: none
+        }
+
+        @media(max-width:920px) {
+
+            .hero,
+            .split {
+                grid-template-columns: 1fr
+            }
+
+            .card {
+                grid-column: span 12
+            }
+
+            .row {
+                grid-template-columns: 1fr
+            }
+
+            .status {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="shell">
+        <section class="hero">
+            <div class="title">
+                <div class="badge">local loopback control</div>
+                <h1>Fromsko <span class="mark">Admin</span></h1>
+                <p class="subtitle">Provider management, MCP service wiring, config import/export, WeChat QR login,
+                    and raw config escape hatches. Local only. Hot reload. Built for operators.</p>
+            </div>
+            <div class="status">
+                <div>
+                    <div class="label">server</div>
+                    <div id="serverState" class="big">online</div>
+                </div>
+                <div>
+                    <div class="label">proxy</div>
+                    <div id="proxyState" class="big">checking</div>
+                </div>
+                <div>
+                    <div class="label">providers</div>
+                    <div id="providerState" class="big">--</div>
+                </div>
+                <div>
+                    <div class="label">mcp</div>
+                    <div id="mcpState" class="big">--</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid">
+            <!-- ── Providers ── -->
+            <div class="card wide tall">
+                <h2>Providers</h2>
+                <div class="split">
+                    <div>
+                        <div class="actions">
+                            <button class="secondary" onclick="newProvider()">+ New Provider</button>
+                            <button class="secondary" onclick="loadCatalog()">From Catalog</button>
+                        </div>
+                        <div id="providerList" class="list" style="margin-top:10px">
+                            <span class="muted">loading providers...</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="row">
+                            <div class="label">provider id</div><input id="provID" placeholder="openai" />
+                        </div>
+                        <div class="row">
+                            <div class="label">name</div><input id="provName" placeholder="OpenAI" />
+                        </div>
+                        <div class="row">
+                            <div class="label">wire type</div><select id="provType">
+                                <option value="openai">openai</option>
+                                <option value="openai-compat">openai-compat</option>
+                                <option value="anthropic">anthropic</option>
+                                <option value="google">google</option>
+                                <option value="azure">azure</option>
+                                <option value="bedrock">bedrock</option>
+                                <option value="google-vertex">google-vertex</option>
+                                <option value="openrouter">openrouter</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="label">base url</div><input id="provBaseURL" placeholder="https://api.openai.com/v1" />
+                        </div>
+                        <div class="row">
+                            <div class="label">api key</div><input id="provAPIKey" type="password" placeholder="sk-..." autocomplete="off" />
+                        </div>
+                        <div class="row">
+                            <div class="label">models</div><textarea id="provModels" spellcheck="false" placeholder="gpt-4o&#10;gpt-4o-mini&#10;o3-mini"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="label">max tokens</div><input id="provMaxTokens" type="number" value="65536" />
+                        </div>
+                        <div class="row">
+                            <div class="label">reasoning</div><select id="provReasoning">
+                                <option>low</option>
+                                <option selected>medium</option>
+                                <option>high</option>
+                            </select>
+                        </div>
+                        <div class="actions">
+                            <button onclick="saveProvider()">Save Provider</button>
+                            <button class="secondary" onclick="testProvider()">Test Connection</button>
+                            <button class="danger" onclick="deleteProvider()">Delete</button>
+                        </div>
+                        <pre id="provTest" class="quota" hidden></pre>
+                        <div id="minimaxQuotaPanel" hidden style="margin-top:10px">
+                            <div class="row">
+                                <div class="label">quota host</div><input id="mmQuotaBaseURL" value="https://api.minimaxi.com" />
+                            </div>
+                            <div class="row">
+                                <div class="label">quota cookie</div><input id="mmQuotaCookie" type="password" placeholder="optional cookie" autocomplete="off" />
+                            </div>
+                            <div class="actions">
+                                <button class="secondary" onclick="testMiniMaxQuota()">Test Quota</button>
+                            </div>
+                            <pre id="mmQuota" class="quota" hidden></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── General ── -->
+            <div class="card">
+                <h2>General</h2>
+                <div class="row">
+                    <div class="label">brand name</div><input id="appName" placeholder="Fromsko Code" />
+                </div>
+                <div class="actions"><button onclick="saveAppName()">Save Brand Name</button><button class="secondary"
+                        onclick="loadConfig()">Refresh</button></div>
+            </div>
+
+            <!-- ── Network Proxy ── -->
+            <div class="card">
+                <h2>Network Proxy</h2>
+                <div class="row">
+                    <div class="label">enabled</div><select id="proxyEnabled">
+                        <option value="true">enabled</option>
+                        <option value="false">disabled</option>
+                    </select>
+                </div>
+                <div class="row">
+                    <div class="label">proxy url</div><input id="proxyURL" placeholder="http://127.0.0.1:7890" />
+                </div>
+                <div class="row">
+                    <div class="label">no proxy</div><input id="noProxy" placeholder="localhost,127.0.0.1" />
+                </div>
+                <div class="actions"><button onclick="saveProxy()">Save Proxy</button><button class="secondary"
+                        onclick="loadConfig()">Refresh</button></div>
+            </div>
+
+            <!-- ── WeChat ── -->
+            <div class="card">
+                <h2>WeChat QR Login</h2>
+                <div class="muted" id="wechatStatus">idle</div>
+                <div class="actions"><button onclick="startWeChat()">Start QR Login</button><button class="secondary"
+                        onclick="loadWeChat()">Refresh</button></div>
+                <div id="wechatQR" class="qr" hidden></div>
+            </div>
+
+            <!-- ── MCP Services ── -->
+            <div class="card wide tall">
+                <h2>MCP Services</h2>
+                <div class="split">
+                    <div>
+                        <div class="actions"><button class="secondary" onclick="newMCP('stdio')">New
+                                stdio</button><button class="secondary" onclick="newMCP('http')">New
+                                http</button><button class="secondary" onclick="newMCP('sse')">New sse</button></div>
+                        <div id="mcpServers" class="list"><span class="muted">loading servers...</span></div>
+                    </div>
+                    <div>
+                        <div class="row">
+                            <div class="label">name</div><input id="mcpName" placeholder="my-tools" />
+                        </div>
+                        <div class="row">
+                            <div class="label">type</div><select id="mcpType" onchange="syncMCPType()">
+                                <option value="stdio">stdio</option>
+                                <option value="http">http</option>
+                                <option value="sse">sse</option>
+                            </select>
+                        </div>
+                        <div id="stdioFields">
+                            <div class="row">
+                                <div class="label">command</div><input id="mcpCommand" placeholder="npx" />
+                            </div>
+                            <div class="row">
+                                <div class="label">args</div><textarea id="mcpArgs"
+                                    placeholder="-y\n@scope/server"></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="label">env</div><textarea id="mcpEnv"
+                                    placeholder="API_KEY=...\nHOST=https://..."></textarea>
+                            </div>
+                        </div>
+                        <div id="remoteFields" hidden>
+                            <div class="row">
+                                <div class="label">url</div><input id="mcpURL"
+                                    placeholder="http://localhost:3000/mcp" />
+                            </div>
+                            <div class="row">
+                                <div class="label">headers</div><textarea id="mcpHeaders"
+                                    placeholder="Authorization=Bearer ..."></textarea>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="label">timeout</div><input id="mcpTimeout" type="number" placeholder="30" />
+                        </div>
+                        <div class="row">
+                            <div class="label">disabled</div><select id="mcpDisabled">
+                                <option value="false">enabled</option>
+                                <option value="true">disabled</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="label">disabled tools</div><textarea id="mcpDisabledTools"
+                                placeholder="tool_a\ntool_b"></textarea>
+                        </div>
+                        <div class="actions"><button onclick="saveMCP()">Save MCP</button><button class="secondary"
+                                onclick="toggleMCP(true)">Enable</button><button class="secondary"
+                                onclick="toggleMCP(false)">Disable</button><button class="danger"
+                                onclick="deleteMCP()">Delete</button></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── MCP Tools ── -->
+            <div class="card">
+                <h2>MCP Tools</h2>
+                <div id="mcpTools" class="tools"><span class="muted">loading tools...</span></div>
+            </div>
+
+            <!-- ── Import / Export ── -->
+            <div class="card">
+                <h2>Config Import / Export</h2>
+                <div class="actions">
+                    <button onclick="exportConfig()">Export JSON</button>
+                    <select id="importMode" style="width:auto;padding:8px 10px">
+                        <option value="merge">merge</option>
+                        <option value="replace">replace</option>
+                    </select>
+                </div>
+                <div class="import-drop" id="importDrop" onclick="$('importFile').click()">
+                    <div>drop .json here or click to upload</div>
+                    <input type="file" id="importFile" accept=".json" onchange="importConfig(this.files[0])" />
+                </div>
+                <div class="actions">
+                    <button class="secondary" onclick="loadConfig()">Refresh Snapshot</button>
+                </div>
+            </div>
+
+            <!-- ── Quick Config ── -->
+            <div class="card">
+                <h2>Quick Config Field</h2>
+                <div class="row">
+                    <div class="label">key</div><input id="cfgKey" placeholder="options.active_mode" />
+                </div>
+                <div class="row">
+                    <div class="label">json value</div><input id="cfgValue" placeholder='"coder"' />
+                </div>
+                <div class="actions"><button onclick="setField()">Set Field</button></div>
+            </div>
+
+            <!-- ── Raw Config (Code Editor) ── -->
+            <div class="card wide">
+                <div class="code-editor-wrap">
+                    <div class="code-editor-header">
+                        <div class="dots">
+                            <span class="red"></span><span class="yel"></span><span class="grn"></span>
+                        </div>
+                        <span>crush-config.json</span>
+                        <div style="display:flex;gap:6px">
+                            <button class="copy-btn" id="copyBtn" onclick="copyConfig()">Copy</button>
+                            <button class="copy-btn" id="saveRawBtn" onclick="saveRawConfig()" style="background:var(--line);color:var(--ink);border-color:var(--line)">Save</button>
+                        </div>
+                    </div>
+                    <div class="code-editor-body">
+                        <textarea id="rawConfig" spellcheck="false"></textarea>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <div id="toast" class="toast"></div>
+    <input type="file" id="catalogPicker" hidden />
+    <script>
+        const $ = id => document.getElementById(id);
+        let currentConfig = null, selectedMCP = '', selectedProvider = '', catalogData = [];
+
+        function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2600) }
+        async function api(path, opts) { const r = await fetch(path, opts); if (!r.ok) { let e = await r.json().catch(() => ({ error: r.statusText })); throw new Error(e.error || r.statusText) } return r.json() }
+        function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])) }
+        function lines(id) { return $(id).value.split(/\r?\n/).map(s => s.trim()).filter(Boolean) }
+        function setLines(id, arr) { $(id).value = (arr || []).join('\n') }
+        function mask(s) { s = String(s || ''); return s.length > 10 ? s.slice(0, 4) + '••••' + s.slice(-4) : '••••' }
+
+        /* ── Config ── */
+        async function loadConfig() {
+            const cfg = await api('/api/config');
+            currentConfig = cfg;
+            $('rawConfig').value = JSON.stringify(cfg, null, 2);
+            $('appName').value = cfg.options?.app_name || '';
+            const n = cfg.options?.network || {};
+            $('proxyEnabled').value = String(!!n.enabled);
+            $('proxyURL').value = n.proxy_url || '';
+            $('noProxy').value = n.no_proxy || 'localhost,127.0.0.1';
+            $('proxyState').textContent = n.enabled ? 'enabled' : 'off';
+            $('providerState').textContent = Object.keys(cfg.providers || {}).length;
+            await loadProviders();
+            await loadMCPServers();
+        }
+
+        /* ── Providers ── */
+        async function loadProviders() {
+            const providers = await api('/api/providers');
+            $('providerState').textContent = providers.length;
+            $('providerList').innerHTML = providers.length
+                ? providers.map(p => `<div class="prov-item ${p.id === selectedProvider ? 'active' : ''}" onclick="selectProvider('${esc(p.id)}')"><div class="prov-info"><b>${esc(p.id)}</b><div class="mini">${esc(p.type || '?')} · ${p.model_count} models${p.has_api_key ? ' · key set' : ''}</div></div><div class="prov-actions"><button class="secondary" onclick="event.stopPropagation();selectProvider('${esc(p.id)}')">Edit</button></div></div>`).join('')
+                : '<span class="muted">No providers configured</span>';
+        }
+
+        function selectProvider(id) {
+            selectedProvider = id;
+            const p = (currentConfig?.providers || {})[id];
+            $('provID').value = id;
+            if (!p) { loadProviders(); return; }
+            $('provName').value = p.name || id;
+            $('provType').value = p.type || 'openai-compat';
+            $('provBaseURL').value = p.base_url || '';
+            $('provAPIKey').placeholder = p.api_key ? 'configured: ' + mask(p.api_key) : 'sk-...';
+            $('provAPIKey').value = '';
+            const models = (p.models || []).map(m => m.id || m);
+            setLines('provModels', models);
+            const first = (p.models || [])[0];
+            if (first && typeof first === 'object') {
+                $('provMaxTokens').value = first.default_max_tokens || 65536;
+                $('provReasoning').value = first.default_reasoning_effort || 'medium';
+            }
+            // Cascade: show MiniMax quota panel if provider is minimax
+            const isMiniMax = id.toLowerCase().includes('minimax');
+            $('minimaxQuotaPanel').hidden = !isMiniMax;
+            if (isMiniMax && p.provider_options) {
+                $('mmQuotaBaseURL').value = p.provider_options.quota_base_url || 'https://api.minimaxi.com';
+                $('mmQuotaCookie').placeholder = p.provider_options.quota_cookie ? 'configured: ' + mask(p.provider_options.quota_cookie) : 'optional cookie';
+            }
+            loadProviders();
+        }
+
+        function newProvider() {
+            selectedProvider = '';
+            $('provID').value = '';
+            $('provName').value = '';
+            $('provType').value = 'openai-compat';
+            $('provBaseURL').value = '';
+            $('provAPIKey').value = '';
+            $('provAPIKey').placeholder = 'sk-...';
+            $('provModels').value = '';
+            $('provMaxTokens').value = '65536';
+            $('provReasoning').value = 'medium';
+            $('minimaxQuotaPanel').hidden = true;
+            $('provTest').hidden = true;
+        }
+
+        async function saveProvider() {
+            const id = $('provID').value.trim();
+            if (!id) { toast('provider id is required'); return; }
+            const body = {
+                id, name: $('provName').value, type: $('provType').value,
+                base_url: $('provBaseURL').value, api_key: $('provAPIKey').value,
+                models: lines('provModels'), default_max_tokens: Number($('provMaxTokens').value || 65536),
+                reasoning_effort: $('provReasoning').value,
+            };
+            await api('/api/providers/save', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+            $('provAPIKey').value = '';
+            selectedProvider = id;
+            toast('provider saved: ' + id);
+            loadConfig();
+        }
+
+        async function deleteProvider() {
+            const id = $('provID').value.trim();
+            if (!id || !confirm('Delete provider ' + id + '?')) return;
+            await api('/api/providers/delete', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id }) });
+            toast('provider deleted: ' + id);
+            newProvider();
+            loadConfig();
+        }
+
+        async function testProvider() {
+            $('provTest').hidden = false;
+            $('provTest').textContent = 'testing connection...';
+            try {
+                const data = await api('/api/config');
+                const id = $('provID').value.trim();
+                const p = (data.providers || {})[id];
+                if (!p) { $('provTest').textContent = 'provider not found in config'; return; }
+                $('provTest').textContent = JSON.stringify({ id: p.id || id, type: p.type, base_url: p.base_url, models: (p.models || []).map(m => m.id || m), has_key: !!p.api_key }, null, 2);
+            } catch (e) { $('provTest').textContent = e.message; }
+        }
+
+        async function loadCatalog() {
+            if (!catalogData.length) {
+                try { catalogData = await api('/api/providers/catalog'); } catch (e) { toast(e.message); return; }
+            }
+            const names = catalogData.map(c => c.id).join('\n');
+            const pick = prompt('Available providers from catalog:\n\n' + names + '\n\nEnter provider ID to add:');
+            if (!pick) return;
+            const entry = catalogData.find(c => c.id === pick.trim());
+            if (!entry) { toast('provider not found in catalog'); return; }
+            selectedProvider = '';
+            $('provID').value = entry.id;
+            $('provName').value = entry.name;
+            $('provType').value = entry.type || 'openai-compat';
+            $('provBaseURL').value = entry.api_endpoint || '';
+            $('provAPIKey').value = '';
+            $('provAPIKey').placeholder = 'sk-...';
+            setLines('provModels', (entry.models || []).map(m => m.id));
+            const first = (entry.models || [])[0];
+            if (first) {
+                $('provMaxTokens').value = first.default_max_tokens || 65536;
+                $('provReasoning').value = first.default_reasoning_effort || 'medium';
+            }
+            toast('catalog entry loaded: ' + entry.id + ' — set API key and save');
+        }
+
+        /* ── General ── */
+        async function saveAppName() {
+            const val = $('appName').value.trim();
+            await api('/api/config/set', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ scope: 0, key: 'options.app_name', value: val || null }) });
+            toast('brand name saved + hot reloaded'); loadConfig();
+        }
+
+        /* ── Proxy ── */
+        async function saveProxy() {
+            await api('/api/proxy', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ enabled: $('proxyEnabled').value === 'true', proxy_url: $('proxyURL').value, no_proxy: $('noProxy').value }) });
+            toast('proxy saved + hot reloaded'); loadConfig();
+        }
+
+        /* ── Quick Config ── */
+        async function setField() {
+            let v; try { v = JSON.parse($('cfgValue').value) } catch (e) { toast('value must be JSON'); return }
+            await api('/api/config/set', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ scope: 0, key: $('cfgKey').value, value: v }) });
+            toast('config field saved'); loadConfig();
+        }
+
+        /* ── Import / Export ── */
+        function exportConfig() {
+            const a = document.createElement('a');
+            a.href = '/api/config/export';
+            a.download = 'crush-config-export.json';
+            a.click();
+            toast('config exported');
+        }
+
+        async function importConfig(file) {
+            if (!file) return;
+            const text = await file.text();
+            const mode = $('importMode').value;
+            try {
+                await api('/api/config/import', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ mode, content: text }) });
+                toast('config imported (' + mode + ')');
+                loadConfig();
+            } catch (e) { toast('import failed: ' + e.message); }
+        }
+
+        // Drag & drop
+        const dropZone = $('importDrop');
+        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover') });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragover'); if (e.dataTransfer.files.length) importConfig(e.dataTransfer.files[0]) });
+
+        /* ── Copy ── */
+        function copyConfig() {
+            const text = $('rawConfig').value;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = $('copyBtn');
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied') }, 1800);
+            }).catch(() => toast('copy failed'));
+        }
+
+        /* ── Save Raw Config ── */
+        async function saveRawConfig() {
+            const text = $('rawConfig').value;
+            let parsed;
+            try { parsed = JSON.parse(text) } catch (e) { toast('invalid JSON: ' + e.message); return; }
+            try {
+                // Import as replace mode
+                await api('/api/config/import', {
+                    method: 'POST',
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify({ mode: 'replace', content: text })
+                });
+                const btn = $('saveRawBtn');
+                btn.textContent = 'Saved!';
+                btn.style.background = '#28c840';
+                btn.style.color = '#000';
+                btn.style.borderColor = '#28c840';
+                setTimeout(() => { btn.textContent = 'Save'; btn.style.background = 'var(--line)'; btn.style.color = 'var(--ink)'; btn.style.borderColor = 'var(--line)' }, 1800);
+                toast('config saved');
+                loadConfig();
+            } catch (e) { toast('save failed: ' + e.message); }
+        }
+
+        /* ── MiniMax Quota (cascade: shows when minimax provider selected) ── */
+        async function testMiniMaxQuota() {
+            const id = $('provID').value.trim();
+            const apiKey = $('provAPIKey').value;
+            const quotaBaseURL = $('mmQuotaBaseURL').value || 'https://api.minimaxi.com';
+            const quotaCookie = $('mmQuotaCookie').value;
+            $('mmQuota').hidden = false;
+            $('mmQuota').textContent = 'fetching quota...';
+            try {
+                const q = await api('/api/minimax/quota', {
+                    method: 'POST',
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify({ provider_id: id, api_key: apiKey, quota_base_url: quotaBaseURL, quota_cookie: quotaCookie })
+                });
+                const models = q.model_remains || q;
+                if (Array.isArray(models) && models.length > 0) {
+                    $('mmQuota').innerHTML = renderQuotaCards(models);
+                } else {
+                    $('mmQuota').textContent = JSON.stringify(models, null, 2);
+                }
+            } catch (e) {
+                $('mmQuota').textContent = e.message + '\nIf cookie is missing, save a MiniMax web login cookie.';
+            }
+        }
+
+        function renderQuotaCards(models) {
+            let html = '<div style="font-size:12px;color:var(--blue)">'
+            html += '<div style="margin-bottom:10px;font-weight:700;color:var(--acid)">MINIMAX Token Plan Dashboard</div>';
+            for (const m of models) {
+                const used = (m.current_interval_total_count || 0) - (m.current_interval_usage_count || 0);
+                const total = m.current_interval_total_count || 0;
+                const pct = total > 0 ? (used / total * 100) : 0;
+                const weekUsed = (m.current_weekly_total_count || 0) - (m.current_weekly_usage_count || 0);
+                const weekTotal = m.current_weekly_total_count || 0;
+                const weekPct = weekTotal > 0 ? (weekUsed / weekTotal * 100) : 0;
+                const resetsIn = formatResetTime(m.remains_time || 0);
+                const weekResetsIn = formatResetTime(m.weekly_remains_time || 0);
+
+                html += '<div style="background:#0a0c10;border:1px solid rgba(255,255,255,.08);padding:10px 12px;margin-bottom:8px">';
+                html += '<div style="color:var(--text);font-weight:700;margin-bottom:6px">' + esc(m.model_name || 'unknown') + '</div>';
+
+                // Interval bar
+                html += '<div style="margin-bottom:4px">';
+                html += '<span style="color:var(--muted)">Interval:</span> ';
+                html += '<span style="color:var(--line)">' + used + ' / ' + total + '</span>';
+                html += '</div>';
+                html += renderBar(pct, resetsIn);
+
+                // Weekly bar
+                html += '<div style="margin-top:6px;margin-bottom:4px">';
+                html += '<span style="color:var(--muted)">Weekly:</span> ';
+                html += '<span style="color:var(--line)">' + weekUsed + ' / ' + weekTotal + '</span>';
+                html += '</div>';
+                html += renderBar(weekPct, weekResetsIn);
+
+                html += '</div>';
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function renderBar(pct, resetLabel) {
+            const w = 100;
+            const filled = Math.min(Math.max(pct, 0), 100);
+            const color = pct > 80 ? 'var(--danger)' : pct > 50 ? 'var(--acid)' : 'var(--line)';
+            let html = '<div style="display:flex;align-items:center;gap:8px">';
+            html += '<div style="flex:1;height:8px;background:#1a1c24;border-radius:4px;overflow:hidden">';
+            html += '<div style="width:' + filled + '%;height:100%;background:' + color + ';border-radius:4px;transition:width .3s"></div>';
+            html += '</div>';
+            html += '<span style="min-width:42px;text-align:right;color:' + color + '">' + pct.toFixed(1) + '%</span>';
+            html += '<span style="min-width:60px;color:var(--muted);font-size:11px">⏱ ' + resetLabel + '</span>';
+            html += '</div>';
+            return html;
+        }
+
+        function formatResetTime(seconds) {
+            if (seconds <= 0) return 'now';
+            const d = Math.floor(seconds / 86400);
+            const h = Math.floor((seconds % 86400) / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            if (d > 0) return d + 'd' + h + 'h';
+            if (h > 0) return h + 'h' + m + 'm';
+            return m + 'm';
+        }
+
+        /* ── MCP ── */
+        async function loadMCPServers() {
+            const servers = await api('/api/mcp/servers');
+            $('mcpState').textContent = servers.filter(s => !s.mcp?.disabled).length + '/' + servers.length;
+            $('mcpServers').innerHTML = servers.length
+                ? servers.map(s => '<div class="item ' + (s.name === selectedMCP ? 'active' : '') + '" onclick="selectMCP(\'' + esc(s.name) + '\')"><b>' + esc(s.name) + '</b><div class="mini">' + esc(s.mcp.type || 'stdio') + ' · ' + (s.mcp.disabled ? 'disabled' : 'enabled') + ' · ' + s.tools + ' tools</div></div>').join('')
+                : '<span class="muted">No MCP servers configured</span>';
+            window.__mcpServers = servers;
+            loadTools().catch(e => toast(e.message));
+        }
+
+        function selectMCP(name) {
+            selectedMCP = name;
+            const row = (window.__mcpServers || []).find(s => s.name === name);
+            if (!row) return;
+            const m = row.mcp || {};
+            $('mcpName').value = name;
+            $('mcpType').value = m.type || 'stdio';
+            $('mcpCommand').value = m.command || '';
+            setLines('mcpArgs', m.args || []);
+            $('mcpEnv').value = Object.entries(m.env || {}).map(([k, v]) => k + '=' + v).join('\n');
+            $('mcpURL').value = m.url || '';
+            $('mcpHeaders').value = Object.entries(m.headers || {}).map(([k, v]) => k + '=' + v).join('\n');
+            $('mcpTimeout').value = m.timeout || '';
+            $('mcpDisabled').value = String(!!m.disabled);
+            setLines('mcpDisabledTools', m.disabled_tools || []);
+            syncMCPType();
+            loadMCPServers();
+        }
+
+        function newMCP(type) {
+            selectedMCP = '';
+            $('mcpName').value = '';
+            $('mcpType').value = type;
+            $('mcpCommand').value = '';
+            $('mcpArgs').value = '';
+            $('mcpEnv').value = '';
+            $('mcpURL').value = '';
+            $('mcpHeaders').value = '';
+            $('mcpTimeout').value = '30';
+            $('mcpDisabled').value = 'false';
+            $('mcpDisabledTools').value = '';
+            syncMCPType();
+        }
+
+        function syncMCPType() { const remote = $('mcpType').value !== 'stdio'; $('stdioFields').hidden = remote; $('remoteFields').hidden = !remote }
+
+        function mcpBody() {
+            const kvParse = id => { const out = {}; for (const line of lines(id)) { const i = line.indexOf('='); if (i > 0) out[line.slice(0, i).trim()] = line.slice(i + 1).trim() } return out };
+            return { name: $('mcpName').value, type: $('mcpType').value, command: $('mcpCommand').value, args: lines('mcpArgs'), env: kvParse('mcpEnv'), url: $('mcpURL').value, headers: kvParse('mcpHeaders'), timeout: Number($('mcpTimeout').value || 0), disabled: $('mcpDisabled').value === 'true', disabled_tools: lines('mcpDisabledTools') };
+        }
+
+        async function saveMCP() {
+            await api('/api/mcp/server', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(mcpBody()) });
+            selectedMCP = $('mcpName').value; toast('MCP server saved'); loadMCPServers(); loadConfig();
+        }
+
+        async function toggleMCP(enable) {
+            const name = $('mcpName').value; if (!name) { toast('select an MCP first'); return }
+            await api('/api/mcp/server/toggle', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name, enable }) });
+            toast('MCP ' + (enable ? 'enabled' : 'disabled')); loadMCPServers(); loadConfig();
+        }
+
+        async function deleteMCP() {
+            const name = $('mcpName').value; if (!name || !confirm('Delete MCP ' + name + '?')) return;
+            await api('/api/mcp/server/delete', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name }) });
+            toast('MCP deleted'); newMCP('stdio'); loadMCPServers(); loadConfig();
+        }
+
+        async function loadTools() {
+            const tools = await api('/api/mcp/tools');
+            $('mcpTools').innerHTML = tools.length
+                ? tools.map(t => '<div class="tool"><span class="pill">' + esc(t.server) + '</span> <b>' + esc(t.name) + '</b><div class="muted">' + esc(t.description || 'no description') + '</div></div>').join('')
+                : '<span class="muted">No MCP tools loaded</span>';
+        }
+
+        /* ── WeChat ── */
+        async function startWeChat() { await api('/api/wechat/start', { method: 'POST' }); toast('wechat qr login started'); loadWeChat() }
+        async function loadWeChat() {
+            const s = await api('/api/wechat/status');
+            $('wechatStatus').textContent = s.error ? ('error: ' + s.error) : (s.user_id ? ('connected: ' + s.user_id) : (s.status || 'idle'));
+            if (s.qr_image) {
+                $('wechatQR').hidden = false;
+                $('wechatQR').innerHTML = `<img alt="WeChat QR code" src="${s.qr_image}">`;
+            } else if (s.qr) {
+                $('wechatQR').hidden = false;
+                $('wechatQR').textContent = s.qr;
+            } else {
+                $('wechatQR').hidden = true;
+                $('wechatQR').textContent = '';
+            }
+        }
+
+        /* ── Init ── */
+        loadConfig().catch(e => toast(e.message));
+        loadWeChat().catch(() => { });
+        setInterval(() => loadWeChat().catch(() => { }), 2500);
+    </script>
+</body>
+
+</html>
