@@ -120,7 +120,7 @@ func TestToast_ShowResetsTimer(t *testing.T) {
 
 func TestToast_AutoHideAfterTTL(t *testing.T) {
 	toast := newTestToast()
-	shortTTL := 50 * time.Millisecond
+	shortTTL := 100 * time.Millisecond
 
 	msg := util.InfoMsg{Type: util.InfoTypeSuccess, Msg: "Quick toast", TTL: shortTTL}
 	toast.Show(msg)
