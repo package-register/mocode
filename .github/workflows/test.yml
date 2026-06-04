@@ -39,7 +39,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CGO_ENABLED: 0
-      GOEXPERIMENT: null
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -50,9 +49,10 @@ jobs:
           go-version-file: go.mod
           cache-dependency-path: go.sum
 
+      - name: Install golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- v1.62.2
+          echo "$PWD/bin" >> $GITHUB_PATH
+
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v8
-        with:
-          version: latest
-          config: .golangci.yml
-          args: --path-mode=abs --timeout=5m
+        run: golangci-lint run --path-mode=abs --timeout=5m ./...
