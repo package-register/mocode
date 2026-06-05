@@ -11,7 +11,8 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/catwalk/pkg/catwalk"
 	mcptools "github.com/package-register/mocode/internal/agent/tools/mcp"
-	"github.com/package-register/mocode/internal/config"
+	"github.com/package-register/mocode/internal/agent"
+	"github.com/package-register/mocode/internal/capability"
 	"github.com/package-register/mocode/internal/history"
 	"github.com/package-register/mocode/internal/lsp"
 	"github.com/package-register/mocode/internal/permission"
@@ -160,6 +161,11 @@ type Workspace interface {
 	// Events
 	Subscribe(program *tea.Program)
 	Shutdown()
+
+	// CommandRegistry returns a single unified registry built from all
+	// registered providers. This is the single source of truth for both
+	// the Slash Completions (input float layer) and Command Palette.
+	BuildCommandRegistry() []capability.CommandDescriptor
 }
 
 // MCPResourceContents holds the contents of an MCP resource.
