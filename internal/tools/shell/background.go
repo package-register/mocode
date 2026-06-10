@@ -17,6 +17,11 @@ const (
 	MaxBackgroundJobs = 50
 	// CompletedJobRetentionMinutes is how long to keep completed jobs before auto-cleanup (8 hours)
 	CompletedJobRetentionMinutes = 8 * 60
+	// BackgroundKillGracePeriod is how long Kill waits for a cooperative shutdown
+	// before escalating or returning.
+	BackgroundKillGracePeriod = 750 * time.Millisecond
+	// BackgroundKillForcePeriod is how long Kill waits after a forced terminate.
+	BackgroundKillForcePeriod = 500 * time.Millisecond
 )
 
 // syncBuffer is a thread-safe wrapper around bytes.Buffer.
@@ -50,13 +55,24 @@ type BackgroundShell struct {
 	Description string
 	Shell       *Shell
 	WorkingDir  string
+	TTY         bool
 	ctx         context.Context
 	cancel      context.CancelFunc
 	stdout      *syncBuffer
 	stderr      *syncBuffer
 	done        chan struct{}
 	exitErr     error
+	runner      backgroundRunner
 	completedAt atomic.Int64 // Unix timestamp when job completed (0 if still running)
+}
+
+type BackgroundShellOptions struct {
+	TTY bool
+}
+
+type backgroundRunner interface {
+	Wait() error
+	Terminate(force bool) error
 }
 
 // BackgroundShellManager manages background shell instances.
@@ -86,10 +102,14 @@ func GetBackgroundShellManager() *BackgroundShellManager {
 }
 
 // Start creates and starts a new background shell with the given command.
-func (m *BackgroundShellManager) Start(ctx context.Context, workingDir string, blockFuncs []BlockFunc, command string, description string) (*BackgroundShell, error) {
+func (m *BackgroundShellManager) Start(ctx context.Context, workingDir string, blockFuncs []BlockFunc, command string, description string, opts ...BackgroundShellOptions) (*BackgroundShell, error) {
 	// Check job limit
 	if m.shells.Len() >= MaxBackgroundJobs {
 		return nil, fmt.Errorf("maximum number of background jobs (%d) reached. Please terminate or wait for some jobs to complete", MaxBackgroundJobs)
+	}
+	options := BackgroundShellOptions{}
+	if len(opts) > 0 {
+		options = opts[0]
 	}
 
 	id := fmt.Sprintf("%03X", idCounter.Add(1))
@@ -107,6 +127,7 @@ func (m *BackgroundShellManager) Start(ctx context.Context, workingDir string, b
 		Description: description,
 		WorkingDir:  workingDir,
 		Shell:       shell,
+		TTY:         options.TTY,
 		ctx:         shellCtx,
 		cancel:      cancel,
 		stdout:      &syncBuffer{},
@@ -118,8 +139,17 @@ func (m *BackgroundShellManager) Start(ctx context.Context, workingDir string, b
 
 	go func() {
 		defer close(bgShell.done)
-
-		err := shell.ExecStream(shellCtx, command, bgShell.stdout, bgShell.stderr)
+		var err error
+		if options.TTY {
+			var runner backgroundRunner
+			runner, err = startTTYBackgroundProcess(shellCtx, shell.GetWorkingDir(), shell.GetEnv(), shell.blockFuncs, command, bgShell.stdout)
+			if err == nil {
+				bgShell.runner = runner
+				err = runner.Wait()
+			}
+		} else {
+			err = shell.ExecStream(shellCtx, command, bgShell.stdout, bgShell.stderr)
+		}
 
 		bgShell.exitErr = err
 		bgShell.completedAt.Store(time.Now().Unix())
@@ -151,8 +181,19 @@ func (m *BackgroundShellManager) Kill(id string) error {
 	}
 
 	shell.cancel()
-	<-shell.done
-	return nil
+	if shell.runner != nil {
+		_ = shell.runner.Terminate(false)
+	}
+	if shell.waitFor(BackgroundKillGracePeriod) {
+		return nil
+	}
+	if shell.runner != nil {
+		_ = shell.runner.Terminate(true)
+		if shell.waitFor(BackgroundKillForcePeriod) {
+			return nil
+		}
+	}
+	return fmt.Errorf("background shell %s is still shutting down", id)
 }
 
 // BackgroundShellInfo contains information about a background shell.
@@ -185,7 +226,7 @@ func (m *BackgroundShellManager) Cleanup() int {
 	}
 
 	for _, id := range toRemove {
-		m.Remove(id)
+		_ = m.Remove(id)
 	}
 
 	return len(toRemove)
@@ -201,6 +242,9 @@ func (m *BackgroundShellManager) KillAll(ctx context.Context) {
 	for _, shell := range shells {
 		wg.Go(func() {
 			shell.cancel()
+			if shell.runner != nil {
+				_ = shell.runner.Terminate(false)
+			}
 			select {
 			case <-shell.done:
 			case <-ctx.Done():
@@ -240,6 +284,18 @@ func (bs *BackgroundShell) WaitContext(ctx context.Context) bool {
 	case <-bs.done:
 		return true
 	case <-ctx.Done():
+		return false
+	}
+}
+
+func (bs *BackgroundShell) waitFor(timeout time.Duration) bool {
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+
+	select {
+	case <-bs.done:
+		return true
+	case <-timer.C:
 		return false
 	}
 }
